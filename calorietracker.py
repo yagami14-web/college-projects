@@ -105,4 +105,4 @@ while True:
     tracker.add_food(food, cal)
 
 tracker.summary()
-print("thank you for using this app")
+print("thank you for using my app")
