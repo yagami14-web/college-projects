@@ -1,1 +1,82 @@
+import json
+import os
+
+FILE_NAME = "attendance.json"
+SAFE_LIMIT = 80
+DANGER_LIMIT = 75
+
+def load_data():
+    if os.path.exists(FILE_NAME):
+        with open(FILE_NAME, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_data(data):
+    with open(FILE_NAME, "w") as f:
+        json.dump(data, f, indent=4)
+
+attendance = load_data()
+
+def add_subject(subject):
+    if subject not in attendance:
+        attendance[subject] = {"attended": 0, "total": 0}
+
+def mark_attendance(subject, present):
+    add_subject(subject)
+    attendance[subject]["total"] += 1
+    if present:
+        attendance[subject]["attended"] += 1
+    save_data(attendance)
+
+def calculate_percentage(attended, total):
+    if total == 0:
+        return 0
+    return (attended / total) * 100
+
+def can_skip_next(attended, total):
+    next_total = total + 1
+    percent_after_skip = calculate_percentage(attended, next_total)
+    return percent_after_skip, percent_after_skip >= SAFE_LIMIT
+
+def show_status():
+    for subject, data in attendance.items():
+        attended = data["attended"]
+        total = data["total"]
+        percent = calculate_percentage(attended, total)
+
+        print(f"\n{subject}")
+        print(f"Attendance: {attended}/{total} = {percent:.2f}%")
+
+        if percent < DANGER_LIMIT:
+            print("STATUS: CRITICAL (<75%)")
+        elif percent < SAFE_LIMIT:
+            print("STATUS: WARNING (<80%)")
+        else:
+            print("STATUS: SAFE")
+
+        future_percent, safe = can_skip_next(attended, total)
+        print(f"If you skip next class: {future_percent:.2f}%")
+
+        if safe:
+            print("You CAN skip the next class safely")
+        else:
+            print("You SHOULD NOT skip the next class")
+
+while True:
+    print("\n1. Mark Attendance")
+    print("2. Show Attendance Status")
+    print("3. Exit")
+
+    choice = input("Choose: ")
+
+    if choice == "1":
+        subject = input("Subject: ")
+        present = input("Present? (y/n): ") == "y"
+        mark_attendance(subject, present)
+
+    elif choice == "2":
+        show_status()
+
+    elif choice == "3":
+        break
 
